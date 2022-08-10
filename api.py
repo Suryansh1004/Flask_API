@@ -13,37 +13,32 @@
 # -X, --request: HTTP method to use when communicating with the server.
 # -H, --header: HTTP headers to send to the server with a POST request.
 # -d, --data: Data to be sent to the server using a POST request.
-
+# to make a post request we need this command
+# curl.exe -i -H "Content-Type: Application/json" -X POST http://localhost:5000/courses 
+# curl.exe -i -H "Content-Type: Application/json" -X PUT http://localhost:5000/courses/3
+# curl.exe -i -H "Content-Type: Application/json" -X DELETE http://localhost:5000/courses/3
 
 
 import json
-from click import command
-from flask import Flask, jsonify
+from multiprocessing import connection
+# from click import command
+from flask import Flask, jsonify, request
+import requests
 app = Flask(__name__) 
 courses = [
-         {'name':"Python",
-            'course_id': "0",
-            'Description': "Python",
-            'price': "$130"
-            },
-           
-           {'name':"Java",
-            'course_id': "1",
-            'Description': "JDK JRE",
-            'price': "$150"
-            },
-           
-           {'name':"Cython",
-            'course_id': "2",
-            'Description': "Python + C",
-            'price': "$80"
-            },
-           
-           {'name':"C++",
-            'course_id': "3",
-            'Description': "STL, Libraries, Competitive Coding",
-            'price': "$120"
-            },
+         {'name':'Python',
+          'course_id':0,
+          'description': 'interpret'
+          },
+           {'name':'java',
+            'course_id': 1,
+            'description': 'Bytecode'},
+           {'name':'Cython',
+            'course_id': 2,
+            'description': 'Syn'},
+           {'name':'C++',
+            'course_id': 3,
+            'description': 'Compiler'},
            ]
 
 @app.route('/')
@@ -59,40 +54,29 @@ def get():
 def get_course(course_id):
     return jsonify({'course':courses[course_id]})
 
-
-
 # POST METHOD
 @app.route("/courses",methods=['POST'])
 def create():
-    course = {'name':"C++",
-            'course_id': "3",
-            'Description': "STL, Libraries, Competitive Coding",
-            'price': "$120"
-            } 
-    courses.append(course)
-    return jsonify({'created': course})
-
-# to make a post request we need this command
-# curl.exe -i -H "Content-Type: Application/json" -X POST http://localhost:5000/courses
+    cour = {'name': request.json['name'],
+              'course_id': request.json['course_id'],
+              'description': request.json['description']
+              } 
+    courses.append(cour)
+    return jsonify({'Course addded':courses})
 
 
 # now put method 
 @app.route("/courses/<int:course_id>", methods = ['PUT'])
 def course_update(course_id):
-    courses[course_id]['Description']  ="XYZ"
-    return jsonify({'course':courses[course_id]})
-    
-# curl.exe -i -H "Content-Type: Application/json" -X PUT http://localhost:5000/courses/3
-
+    # course = [course for course in courses if course['id'] == course_id]
+    # courses[course_id]['name'] = request.json['name']
+    courses[course_id]['description'] = request.json.get('description',courses[course_id]['description'])
+    return jsonify({'course_updated': courses[course_id]})
 
 @app.route("/courses/<int:course_id>",methods = ['DELETE'])
 def delete(course_id):
     courses.remove(courses[course_id])
-    return jsonify({'result': True})
-# curl.exe -i -H "Content-Type: Application/json" -X DELETE http://localhost:5000/courses/3
-
+    return jsonify({'Deleted': courses})
 
 if __name__ == "__main__":
-    #    app.run(debug = True)
-    # Threaded option to enable multiple instances for multiple user access support
-    app.run(threaded=True, port=5000)
+    app.run()
